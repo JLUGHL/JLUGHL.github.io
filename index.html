@@ -44,7 +44,7 @@
     lang   : 'zh-CN'
   };
 </script>
-
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <title>首页 | GHL's Blog
 </title>
   
@@ -117,6 +117,11 @@
         <li class="menu-item menu-item-home">
 
     <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
 
   </li>
         <li class="menu-item menu-item-archives">
@@ -247,8 +252,10 @@
 
       <div class="site-overview-wrap sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="GHL"
+      src="/images/avatar.png">
   <p class="site-author-name" itemprop="name">GHL</p>
-  <div class="site-description" itemprop="description">JLUer</div>
+  <div class="site-description" itemprop="description">Be water, my friend.</div>
 </div>
 <div class="site-state-wrap motion-element">
   <nav class="site-state">
@@ -258,6 +265,12 @@
           <span class="site-state-item-count">2</span>
           <span class="site-state-item-name">日志</span>
         </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>

@@ -20,12 +20,12 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="JLUer">
+  <meta name="description" content="Be water, my friend.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="GHL&#39;s Blog">
 <meta property="og:url" content="http://example.com/blog/index.html">
 <meta property="og:site_name" content="GHL&#39;s Blog">
-<meta property="og:description" content="JLUer">
+<meta property="og:description" content="Be water, my friend.">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:author" content="GHL">
 <meta name="twitter:card" content="summary">
@@ -42,7 +42,7 @@
     lang   : 'zh-CN'
   };
 </script>
-
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <title>GHL's Blog</title>
   
 
@@ -116,6 +116,11 @@
     <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
 
   </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
         <li class="menu-item menu-item-archives">
 
     <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
@@ -151,9 +156,9 @@
     <link itemprop="mainEntityOfPage" href="http://example.com/2026/01/20/One%20Time%20Pad/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="image" content="/images/avatar.png">
       <meta itemprop="name" content="GHL">
-      <meta itemprop="description" content="JLUer">
+      <meta itemprop="description" content="Be water, my friend.">
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
@@ -173,7 +178,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2026-01-20 10:46:33 / 修改时间：12:29:24" itemprop="dateCreated datePublished" datetime="2026-01-20T10:46:33+08:00">2026-01-20</time>
+              <time title="创建时间：2026-01-20 10:46:33 / 修改时间：14:11:29" itemprop="dateCreated datePublished" datetime="2026-01-20T10:46:33+08:00">2026-01-20</time>
             </span>
 
           
@@ -226,9 +231,9 @@ where k is uniform in K, k is a random variable that’s uniformly smaple in the
     <link itemprop="mainEntityOfPage" href="http://example.com/2026/01/20/%E8%83%8C%E5%8C%85%E9%97%AE%E9%A2%98/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="image" content="/images/avatar.png">
       <meta itemprop="name" content="GHL">
-      <meta itemprop="description" content="JLUer">
+      <meta itemprop="description" content="Be water, my friend.">
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
@@ -248,7 +253,7 @@ where k is uniform in K, k is a random variable that’s uniformly smaple in the
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2026-01-20 00:00:00 / 修改时间：12:46:59" itemprop="dateCreated datePublished" datetime="2026-01-20T00:00:00+08:00">2026-01-20</time>
+              <time title="创建时间：2026-01-20 00:00:00 / 修改时间：14:16:53" itemprop="dateCreated datePublished" datetime="2026-01-20T00:00:00+08:00">2026-01-20</time>
             </span>
 
           
@@ -402,8 +407,10 @@ M834 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">�
 
       <div class="site-overview-wrap sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="GHL"
+      src="/images/avatar.png">
   <p class="site-author-name" itemprop="name">GHL</p>
-  <div class="site-description" itemprop="description">JLUer</div>
+  <div class="site-description" itemprop="description">Be water, my friend.</div>
 </div>
 <div class="site-state-wrap motion-element">
   <nav class="site-state">
@@ -413,6 +420,12 @@ M834 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">�
           <span class="site-state-item-count">2</span>
           <span class="site-state-item-name">日志</span>
         </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>
