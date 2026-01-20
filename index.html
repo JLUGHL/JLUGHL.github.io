@@ -171,7 +171,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2026-01-20 10:46:33 / 修改时间：11:14:48" itemprop="dateCreated datePublished" datetime="2026-01-20T10:46:33+08:00">2026-01-20</time>
+              <time title="创建时间：2026-01-20 10:46:33 / 修改时间：11:21:29" itemprop="dateCreated datePublished" datetime="2026-01-20T10:46:33+08:00">2026-01-20</time>
             </span>
 
           
@@ -185,18 +185,18 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>Def: a cipher defind over (K, M, C)<br>a cipher is a pair of “efficient” algs (E, D) where $E:K\times M\to C$ and $D:K\times C \to M$<br>Consistency equation: $\forall m \in M,k\in K,D(k,E(k,m))&#x3D;m$<br>every cipher has to satisfy it in order to be a cipher. Other wise, it would be unpossible to decrypt.</p>
+          <p><strong>Info:</strong> Def: a cipher defind over (K, M, C)<br>a cipher is a pair of “efficient” algs (E, D) where $E:K\times M\to C$ and $D:K\times C \to M$<br>Consistency equation: $\forall m \in M,k\in K,D(k,E(k,m))&#x3D;m$<br>every cipher has to satisfy it in order to be a cipher. Other wise, it would be unpossible to decrypt.</p>
 <ul>
 <li><strong><em>E</em></strong> is often randomized. <strong><em>D</em></strong> is always deterministic.</li>
 </ul>
-<h2 id="One-time-pad"><a href="#One-time-pad" class="headerlink" title="One time pad"></a>One time pad</h2><p>First example of a “secure” cipher.</p>
+<h2 id="One-time-pad"><a href="#One-time-pad" class="headerlink" title="One time pad"></a>One time pad</h2><p><strong>Warning:</strong> First example of a “secure” cipher.</p>
 <p>$M&#x3D;C&#x3D;K&#x3D;{0,1}^n$</p>
 <p>A key in one time pad is a random sequence of bits that’s as long as the message to be encrypted.</p>
-<p>If all you see is the cipher text, you should know nothing about the plain text.</p>
+<p><strong>Success:</strong> If all you see is the cipher text, you should know nothing about the plain text.</p>
 <p>Def: a cipher (<strong>E, D</strong>) over (K, M, C) has perfect secrecy if $\forall m_0,m_1 \in M,\forall c \in C$, $Pr(E(k,m_0)&#x3D;C)&#x3D;Pr(E(k,m_1)&#x3D;C)$<br>where k is uniform in K, k is a random variable that’s uniformly smaple in the key space K.</p>
 <p>if an attacker intercept a particular cipher text c, he has no idea about what it comes from. Even the most powerful attacker can learn nothing about the plain text from the cipher text.</p>
-<p>There is only one OTP key map $m$ to $c$</p>
-<p>Perfect secrecy requires $|K|\geq |M|$</p>
+<p><strong>Tip:</strong> There is only one OTP key map $m$ to $c$</p>
+<p><strong>Danger:</strong> Perfect secrecy requires $|K|\geq |M|$</p>
 
       
     </div>
