@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 8.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="CPU Intro：进程与程序 进程与程序 程序本身是 lifeless（无生命） 的，它只是静静地躺在磁盘上，是一堆等待被执行的指令和静态数据。 进程（Process） 是一个 “running program”。操作系统负责把那些静止的字节跑起来，让它们变成有用的东西。 在操作系统眼中，每个进程都有自己独立的 机器状态（machine state）：  内存：用于存储指令和数据。 寄存器：比如">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Virtualization">
+<meta property="og:url" content="http://example.com/2026/01/20/Virtualization/index.html">
+<meta property="og:site_name" content="GHL&#39;s Blog">
+<meta property="og:description" content="CPU Intro：进程与程序 进程与程序 程序本身是 lifeless（无生命） 的，它只是静静地躺在磁盘上，是一堆等待被执行的指令和静态数据。 进程（Process） 是一个 “running program”。操作系统负责把那些静止的字节跑起来，让它们变成有用的东西。 在操作系统眼中，每个进程都有自己独立的 机器状态（machine state）：  内存：用于存储指令和数据。 寄存器：比如">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-01-20T13:13:29.000Z">
+<meta property="article:modified_time" content="2026-01-20T13:20:48.498Z">
+<meta property="article:author" content="GHL">
+<meta property="article:tag" content="操作系统">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2026/01/20/Virtualization/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <title>Virtualization | GHL's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">GHL's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">随便学学</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/01/20/Virtualization/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="GHL">
+      <meta itemprop="description" content="Be water, my friend.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="GHL's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Virtualization
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-01-20 21:13:29 / 修改时间：21:20:48" itemprop="dateCreated datePublished" datetime="2026-01-20T21:13:29+08:00">2026-01-20</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1>CPU Intro：进程与程序</h1>
+<h2 id="进程与程序">进程与程序</h2>
+<p>程序本身是 <strong>lifeless（无生命）</strong> 的，它只是静静地躺在磁盘上，是一堆等待被执行的指令和静态数据。</p>
+<p><strong>进程（Process）</strong> 是一个 “running program”。操作系统负责把那些静止的字节跑起来，让它们变成有用的东西。</p>
+<p>在操作系统眼中，每个进程都有自己独立的 <strong>机器状态（machine state）</strong>：</p>
+<ul>
+<li><strong>内存</strong>：用于存储指令和数据。</li>
+<li><strong>寄存器</strong>：比如程序计数器（PC），记录当前运行到哪一条指令了。</li>
+</ul>
+<p>但是我们知道，随便打开几个软件会有好几个进程，但是物理上的 CPU 是有限个。为了服务这些进程，我们需要一项被称为 <strong>CPU 虚拟化 (Virtualizing the CPU)</strong> 的技术。为了实现这样的目标，操作系统采用了一个非常经典的方法，叫做 <strong>“分时共享”</strong>。</p>
+<p>这样的分时共享可以用下面的例子来理解：</p>
+<details>
+<summary style="cursor: pointer; font-weight: bold; color: #2196f3; background-color: #f0f8ff; padding: 10px; border-radius: 5px;">
+  ♟️ 形象理解：分时共享与国际象棋大师 (点击展开)
+</summary>
+<div style="padding: 10px; border: 1px solid #2196f3; border-radius: 5px; margin-top: 10px; background-color: #fbfdff;">
+<p>我们可以想象一个超级快速的 <strong>国际象棋大师</strong> 同时在和 10 个人下棋：</p>
+<ol>
+<li>大师走到第 1 个棋盘前，思考一下，走了一步。</li>
+<li>然后他迅速跑到第 2 个棋盘前，走了一步。</li>
+<li>接着是第 3 个……</li>
+</ol>
+<p>只要大师的速度足够快，对于每一个对手来说，感觉就像大师一直在专心陪自己下棋一样。</p>
+<p><strong>代价：</strong> 分时共享的潜在代价是性能。如果 CPU 必须在多个进程之间共享，那么每个进程分到的时间片就会减少，运行起来自然会感觉到慢一些。</p>
+</div>
+</details>
+<br>
+<h2 id="进程的生命周期">进程的生命周期</h2>
+<p>进程在运行过程中主要有三种状态：</p>
+<ol>
+<li><strong>运行 (Running)</strong>：进程正在处理器上执行指令。</li>
+<li><strong>就绪 (Ready)</strong>：进程其实已经准备好可以跑了，但是操作系统出于某些原因，决定暂时先不运行它。</li>
+<li><strong>阻塞 (Blocked)</strong>：进程执行了某种操作（比如 I/O 请求），在等待结果期间它暂时无法运行。</li>
+</ol>
+<p>当当前程序被操作系统设置为阻塞状态时，调度器会查看就绪列表，挑选另外的进程上台运行。</p>
+<h2 id="数据结构与上下文">数据结构与上下文</h2>
+<p>给出下面一个情景：</p>
+<blockquote>
+<p>想象一下，进程 A 正在计算 <code>10 + 20</code>，刚算到一半（比如把 10 读进来了），突然被操作系统叫停（切换到进程 B）。等轮到进程 A 再次运行时，它必须从 <strong>完全一样</strong> 的状态继续，不能把之前的计算忘了，也不能算错。</p>
+</blockquote>
+<p>为了做到这一点，在切换 <strong>之前</strong>，操作系统必须把进程 A 的一些“关键现场信息”保存起来。为了让程序“无缝”恢复，操作系统必须保存 CPU 寄存器里的内容。</p>
+<p>我们把这种“保存当前进程状态，恢复另一个进程状态”的过程称为 <strong>上下文切换 (Context Switch)</strong>。</p>
+<p>为了管理成百上千个进程，操作系统会把所有的 <code>struct proc</code> 穿成一个长长的列表，叫做 <strong>进程列表</strong>。这样，操作系统只需要扫描这个列表，就知道谁在跑，谁在睡，谁在等。</p>
+<p>在 xv6 操作系统的代码示例中，有一个用于记录进程状态的枚举变量：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">proc_state</span> &#123;</span> UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE &#125;;</span><br></pre></td></tr></table></figure>
+<p>其中的 ZOMBIE 用于保存进程结束之后的信息（例如 return code 之类）。它最后调用 wait 函数查看子进程是完成任务还是出错了，在确认之后由操作系统进行清理。</p>
+<h1>CPU-API</h1>
+<h2 id="fork">fork()</h2>
+<p>fork() 就像细胞分裂。当一个程序调用 fork() 时，操作系统会瞬间创建一个全新的进程，我们称之为子进程，相应的原来的进程我们称之为父进程。</p>
+<p>它们有相同的代码，相同的数据，甚至此时此刻执行到了同一行。</p>
+<p>但我们需要注意：一次调用，两次返回。</p>
+<p>在父进程中，fork() 返回创建的子进程的 PID。</p>
+<p>在子进程中，fork() 返回 0。</p>
+<p>正是通过检查这个返回值，我们可以知道程序到底是“本体”还是“克隆体”。</p>
+<p>有个有趣的问题是，当 fork() 完成的一瞬间，我们无法确定是父进程先执行下一行代码，还是子进程先执行下一行代码，这取决于 CPU 调度器。这带来了一个麻烦：如果我们希望父进程必须等子进程把活干完，这种随机性就是灾难。</p>
+<p>这时候，我们需要用到第二个关键函数。</p>
+<h2 id="wait">wait()</h2>
+<p><code>wait()</code> 函数的作用就和它的名字一样简单：让父进程停下来等待。</p>
+<p>当父进程调用 <code>wait()</code> 时，它会把自己 “挂起”，不再占用 CPU。只有当子进程运行结束后，<code>wait()</code> 才会返回，父进程才会继续往下运行。</p>
+<p>这样就解决了谁先执行的问题，保证了父进程一定在子进程之后执行。</p>
+<h2 id="exec">exec()</h2>
+<p><code>exec()</code> 并没有创建新的进程，而是直接替换了当前进程的内容。</p>
+<p>操作系统会从磁盘加载新的程序，用它的代码段、静态数据、堆栈完全覆盖掉原来的程序。但它会保留 PID 和资源等，只是替换了运行代码。</p>
+<p>一旦 <code>exec()</code> 成功执行，它就永远不会返回了，源程序的后续代码会直接被“抹杀”。</p>
+<p>Unix 哲学：<code>fork</code> 与 <code>exec</code> 的分离</p>
+<details> <summary style="cursor: pointer; font-weight: bold; background-color: #eee; padding: 10px; border-radius: 5px;"> 🤔 思考：为什么不直接搞一个 spawn() 函数？ </summary> <div style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; margin-top: 10px;">
+<p>你可能会问：</p>
+<p>“为什么我们不直接搞一个 spawn(program_name) 函数，一步到位创建并运行新的程序，而非要先复制自身，然后再自杀？？这不是浪费资源吗？”</p>
+</div> </details>
+这种将 fork() 和 exec() 分离的设计，正是 Unix Shell 如此强大的秘密所在。
+<p>在 <code>fork()</code> 之后，但在 <code>exec()</code> 之前，Shell 有机会在子进程里偷偷运行一小段代码，用于改变子进程的环境，从而实现类似 重定向 和 管道 等功能。</p>
+<details> <summary style="cursor: pointer; font-weight: bold; color: #2e7d32; background-color: #e8f5e9; padding: 10px; border-radius: 5px;"> 🪄 魔法揭秘：Shell 输出重定向是如何实现的？ </summary> <div style="padding: 10px; border: 1px solid #2e7d32; border-radius: 5px; margin-top: 10px; background-color: #f1f8e9;">
+<p>如果在 Shell 里输入命令 <code>wc p3.c &gt; newfile.txt</code>，Shell 是如何做到不修改 wc 程序的代码，却能神奇地把 wc 的输出结果从“屏幕”转移到“文件”里的呢？</p>
+<p><strong>Shell 通过进程创建、文件描述符重定向和标准输出重定向实现这一功能，整过程无需修改 <code>wc</code> 程序的代码。</strong></p>
+<h3 id="关键机制">关键机制</h3>
+<ol>
+<li>
+<p><strong>进程创建与标准流</strong></p>
+<ul>
+<li>Shell 解析命令后，通过 <code>fork()</code> 创建子进程</li>
+<li>每个进程默认打开三个标准流：
+<ul>
+<li>标准输入（stdin，文件描述符 0）</li>
+<li>标准输出（stdout，文件描述符 1）</li>
+<li>标准错误（stderr，文件描述符 2）</li>
+</ul>
+</li>
+<li>默认情况下，标准输出指向终端设备（屏幕）</li>
+</ul>
+</li>
+<li>
+<p><strong>重定向操作步骤</strong></p>
+<ul>
+<li>Shell 在执行 <code>wc</code> 前识别到 <code>&gt;</code> 重定向符</li>
+<li>打开（或创建）<code>newfile.txt</code>，获得新文件描述符</li>
+<li>使用 <code>dup2()</code> 系统调用，将新文件的描述符<strong>复制到标准输出（文件描符 1）的位置</strong></li>
+<li>文件描述符 1 现在指向 <code>newfile.txt</code>，而非屏幕</li>
+</ul>
+</li>
+<li>
+<p><strong>程序执行</strong></p>
+<ul>
+<li><code>wc</code> 程序启动，它只负责向文件描述符 1 写入数据</li>
+<li>程序不知道也不关心描述符 1 指向哪里</li>
+<li>由于 Shell 已提前重定向，输出自然写入文件</li>
+</ul>
+</li>
+</ol>
+<h3 id="技术原理">技术原理</h3>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Shell 内部执行类似以下操作：</span></span><br><span class="line">pid = fork();                     <span class="comment">// 创建子进程</span></span><br><span class="line"><span class="keyword">if</span> (pid == <span class="number">0</span>) &#123;                   <span class="comment">// 子进程中</span></span><br><span class="line">    <span class="type">int</span> fd = open(<span class="string">&quot;newfile.txt&quot;</span>, O_WRONLY|O_CREAT|O_TRUNC, <span class="number">0644</span>);</span><br><span class="line">    dup2(fd, STDOUT_FILENO);      <span class="comment">// 将标准输出重定向到文件</span></span><br><span class="line">    close(fd);                    <span class="comment">// 关闭多余的文件描述符</span></span><br><span class="line">    execvp(<span class="string">&quot;wc&quot;</span>, args);           <span class="comment">// 执行 wc 程序</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="设计哲学">设计哲学</h3>
+<ul>
+<li><strong>关注点分离</strong>：程序只负责&quot;写什么&quot;，Shell 负责&quot;写到哪里&quot;</li>
+<li><strong>通用性</strong>：所有遵循 Unix 标准（读写文件描述符 0/1/2）的程序都支持重向</li>
+<li><strong>透明性</strong>：程序无需为支持重定向做特殊编码</li>
+</ul>
+<h3 id="扩展应用">扩展应用</h3>
+<ul>
+<li>输入重定向 <code>&lt;</code>：类似原理，重定向标准输入（文件描述符 0）</li>
+<li>错误重定向 <code>2&gt;</code>：重定向标准错误（文件描述符 2）</li>
+<li>管道 <code>|</code>：将一个程序的标准输出连接到另一个程序的标准输入</li>
+</ul>
+<p><strong>正是 Unix/Linux 的文件描述符机制和 Shell 的进程管理能力，使得这种&quot;神奇&quot;的重定向成为可能。</strong></p>
+</div> </details>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" rel="tag"># 操作系统</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2026/01/20/One%20Time%20Pad/" rel="prev" title="One Time Pad">
+      <i class="fa fa-chevron-left"></i> One Time Pad
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2026/04/22/BSGS%E7%AE%97%E6%B3%95/" rel="next" title="">
+       <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">CPU Intro：进程与程序</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%A8%8B%E5%BA%8F"><span class="nav-number">1.1.</span> <span class="nav-text">进程与程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-number">1.2.</span> <span class="nav-text">进程的生命周期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E4%B8%8A%E4%B8%8B%E6%96%87"><span class="nav-number">1.3.</span> <span class="nav-text">数据结构与上下文</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">CPU-API</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#fork"><span class="nav-number">2.1.</span> <span class="nav-text">fork()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#wait"><span class="nav-number">2.2.</span> <span class="nav-text">wait()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#exec"><span class="nav-number">2.3.</span> <span class="nav-text">exec()</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E6%9C%BA%E5%88%B6"><span class="nav-number">2.3.1.</span> <span class="nav-text">关键机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8A%80%E6%9C%AF%E5%8E%9F%E7%90%86"><span class="nav-number">2.3.2.</span> <span class="nav-text">技术原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%BE%E8%AE%A1%E5%93%B2%E5%AD%A6"><span class="nav-number">2.3.3.</span> <span class="nav-text">设计哲学</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%A9%E5%B1%95%E5%BA%94%E7%94%A8"><span class="nav-number">2.3.4.</span> <span class="nav-text">扩展应用</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="GHL"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">GHL</p>
+  <div class="site-description" itemprop="description">Be water, my friend.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JLUGHL" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JLUGHL" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">GHL</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

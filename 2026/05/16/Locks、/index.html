@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 8.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="我们为什么需要锁？ 如果一个应用程序运行在多个 CPU 核上，并且执行了系统调用，那么内核需要能够处理这些并行的系统调用。 如果多个内核都在运行系统调用，那么它们可能访问内核中共享的数据结构。 当有对这些数据结构的并行访问时，我们需要锁来协调对共享数据的更新。更进一步的，我们需要锁来保证共享的数据是正确的。 从 kfree 考虑，我们假设有2个CPU在处理这个函数，这时候一个CPU执行 r-&amp;gt">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Locks">
+<meta property="og:url" content="http://example.com/2026/05/16/Locks%E3%80%81/index.html">
+<meta property="og:site_name" content="GHL&#39;s Blog">
+<meta property="og:description" content="我们为什么需要锁？ 如果一个应用程序运行在多个 CPU 核上，并且执行了系统调用，那么内核需要能够处理这些并行的系统调用。 如果多个内核都在运行系统调用，那么它们可能访问内核中共享的数据结构。 当有对这些数据结构的并行访问时，我们需要锁来协调对共享数据的更新。更进一步的，我们需要锁来保证共享的数据是正确的。 从 kfree 考虑，我们假设有2个CPU在处理这个函数，这时候一个CPU执行 r-&amp;gt">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-05-16T13:40:00.000Z">
+<meta property="article:modified_time" content="2026-05-16T13:53:49.186Z">
+<meta property="article:author" content="GHL">
+<meta property="article:tag" content="操作系统">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2026/05/16/Locks%E3%80%81/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <title>Locks | GHL's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">GHL's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">随便学学</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/05/16/Locks%E3%80%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="GHL">
+      <meta itemprop="description" content="Be water, my friend.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="GHL's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Locks
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-05-16 21:40:00 / 修改时间：21:53:49" itemprop="dateCreated datePublished" datetime="2026-05-16T21:40:00+08:00">2026-05-16</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="我们为什么需要锁？">我们为什么需要锁？</h2>
+<p>如果一个应用程序运行在多个 CPU 核上，并且执行了系统调用，那么内核需要能够处理这些并行的系统调用。</p>
+<p>如果多个内核都在运行系统调用，那么它们可能访问内核中共享的数据结构。</p>
+<p>当有对这些数据结构的并行访问时，我们需要锁来协调对共享数据的更新。更进一步的，我们需要锁来保证共享的数据是正确的。</p>
+<p>从 <code>kfree</code> 考虑，我们假设有2个CPU在处理这个函数，这时候一个CPU执行 <code>r-&gt;next = kmem.freelist;</code> 另一个函CPU时也执行 <code>r-&gt;next = kmem.freelist;</code> 这样 r1 r2 都指向 <code>freelist</code> 然后到了下一句 <code>kmem.freelist = r;</code> 两个CPU执行完之后，我们会丢失先执行的那个CPU所指向的页表。</p>
+<h2 id="锁的抽象">锁的抽象</h2>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">lock</span>&#123;</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>锁有两个关键的方法，分别是 <code>acquire()</code> 和 <code>release()</code> ，它们都接受一个指向锁的指针作为参数， <code>acquire()</code> 确保了只能有一个进程能够成功的获取锁，任何在同一时间获取锁的进程必须等到第一个进程调用 <code>release</code> 。</p>
+<p>锁的获取和释放的代码通常被称为 <code>critical section</code> （临界区）</p>
+<h2 id="如果我们的内核只有一个锁">如果我们的内核只有一个锁</h2>
+<p>如果我们有一个程序并行调用多个系统调用，这些系统调用会串行执行，因为我们的内核只有一把锁。</p>
+<p>所以一般的操作系统中，都会有多个锁，这样才能实现某种程度上的并发执行。</p>
+<p>如果程序需要一段代码具有原子性，这是由程序员决定锁的 <code>acquire</code> 和 <code>release</code> 的。</p>
+<p>代码不会自动加锁，程序员需要自行决定是否将锁与数据结构关联。</p>
+<h2 id="什么时候才需要加锁呢">什么时候才需要加锁呢</h2>
+<p>如果两个进程访问了一个共享的数据结构，其中一个进程会更新数据结构，那么就需要对这个数据结构加锁。</p>
+<p>但是加锁会导致性能的损失， 上面的情景下不加锁也可能正常工作，不加锁的程序通常称之为 <code>lock-free program</code> ，不加锁可以获得更好的性能和并发度，</p>
+<h2 id="认识锁的视角">认识锁的视角</h2>
+<ol>
+<li>锁可以帮助避免数据更新的丢失</li>
+<li>锁可以打包多个操作，使其具有原子性</li>
+<li>锁可以维护共享数据结构的不变形</li>
+</ol>
+<h2 id="不恰当地使用锁可能带来一些锁特有的缺点">不恰当地使用锁可能带来一些锁特有的缺点</h2>
+<p>首先就是死锁（DeadLock）<br>
+如果我们先 <code>acquire</code> 一个锁，然后进入 <code>critical section</code> ，这时候我们再尝试 <code>acquire</code> 同一个锁，我们知道这是不被允许的，第二次 <code>acquire</code> 不会成功，会等待第一个 <code>acquire</code> 的 <code>release</code> ，但是这个时候这个程序不会继续往下推进，也就不会 <code>release</code> ，这样就导致了死锁。</p>
+<p>另一种情景是：<br>
+假设我们有2个CPU，其中一个在执行 <code>rename(&quot;d1/x&quot;,&quot;d2/y&quot;)</code> 另一个在执行 <code>rename(&quot;d2/a&quot;,&quot;d1/b&quot;)</code> ，开始执行的时候，CPU1获得 d1 的锁，CPU2获得 d2 的锁，下一步CPU1需要获取 d2 的锁，CPU2需要获取 d1 的锁，就会导致死锁，因为互相都获取不到。<br>
+上面的场景有时候被称为 <code>Deadly embrace</code></p>
+<p>解决上面 <code>Deadly embrace</code> 的方法很简单，只需要对锁进行排序，保证所有操作必须以相同的顺序获取锁即可。在定义锁的排序时，必须是全局的</p>
+<p>另外，锁的操作有时候还会违反代码的抽象要求，例如一个函数中涉及到另一个函数的调用，那么必须知道这个函数涉及了哪些锁。也就是说锁让代码的模块化更困难了。</p>
+<p>最后，为了实现性能的优化，需要把锁和数据结构进行拆分，但这又会引入更多的操作。通常的开发流程是：先从大锁开始，对程序进行测试，看看程序是否能使用多核，是否得到了加速，如果得到加速说明锁已经实现的很好了，否则说明锁存在竞争，之后我们需要重构程序。</p>
+<h2 id="如何实现锁">如何实现锁</h2>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">if</span>(l-&gt;lock==<span class="number">0</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		l-&gt;lock = <span class="number">1</span>;</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面是一个自旋锁的实现，但是存在 race condition，如果CPU1和CPU2同时看到 <code>l-&gt;lock == 0</code> 那么两个CPU会同时获得锁，变成死锁。</p>
+<p><strong>我们必须要用硬件锁才能实现软件锁。</strong></p>
+<p>回顾xv6的自旋锁实现，我们可以看到使用了 <code>test_and_set</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span></span><br><span class="line"><span class="title function_">acquire</span><span class="params">(<span class="keyword">struct</span> spinlock *lk)</span></span><br><span class="line">&#123;</span><br><span class="line">push_off(); <span class="comment">// disable interrupts to avoid deadlock.</span></span><br><span class="line"><span class="keyword">if</span>(holding(lk))</span><br><span class="line">panic(<span class="string">&quot;acquire&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// On RISC-V, sync_lock_test_and_set turns into an atomic swap:</span></span><br><span class="line"><span class="comment">// a5 = 1</span></span><br><span class="line"><span class="comment">// s1 = &amp;lk-&gt;locked</span></span><br><span class="line"><span class="comment">// amoswap.w.aq a5, a5, (s1)</span></span><br><span class="line"><span class="keyword">while</span>(__sync_lock_test_and_set(&amp;lk-&gt;locked, <span class="number">1</span>) != <span class="number">0</span>)</span><br><span class="line">;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Tell the C compiler and the processor to not move loads or stores</span></span><br><span class="line"><span class="comment">// past this point, to ensure that the critical section&#x27;s memory</span></span><br><span class="line"><span class="comment">// references happen strictly after the lock is acquired.</span></span><br><span class="line"><span class="comment">// On RISC-V, this emits a fence instruction.</span></span><br><span class="line">__sync_synchronize();</span><br><span class="line"></span><br><span class="line"><span class="comment">// Record info about lock acquisition for holding() and debugging.</span></span><br><span class="line">lk-&gt;cpu = mycpu();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" rel="tag"># 操作系统</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2026/04/22/BSGS%E7%AE%97%E6%B3%95/" rel="prev" title="">
+      <i class="fa fa-chevron-left"></i> 
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E4%BB%AC%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E9%94%81%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">我们为什么需要锁？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%94%81%E7%9A%84%E6%8A%BD%E8%B1%A1"><span class="nav-number">2.</span> <span class="nav-text">锁的抽象</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E6%9E%9C%E6%88%91%E4%BB%AC%E7%9A%84%E5%86%85%E6%A0%B8%E5%8F%AA%E6%9C%89%E4%B8%80%E4%B8%AA%E9%94%81"><span class="nav-number">3.</span> <span class="nav-text">如果我们的内核只有一个锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E6%89%8D%E9%9C%80%E8%A6%81%E5%8A%A0%E9%94%81%E5%91%A2"><span class="nav-number">4.</span> <span class="nav-text">什么时候才需要加锁呢</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%A4%E8%AF%86%E9%94%81%E7%9A%84%E8%A7%86%E8%A7%92"><span class="nav-number">5.</span> <span class="nav-text">认识锁的视角</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8D%E6%81%B0%E5%BD%93%E5%9C%B0%E4%BD%BF%E7%94%A8%E9%94%81%E5%8F%AF%E8%83%BD%E5%B8%A6%E6%9D%A5%E4%B8%80%E4%BA%9B%E9%94%81%E7%89%B9%E6%9C%89%E7%9A%84%E7%BC%BA%E7%82%B9"><span class="nav-number">6.</span> <span class="nav-text">不恰当地使用锁可能带来一些锁特有的缺点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E9%94%81"><span class="nav-number">7.</span> <span class="nav-text">如何实现锁</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="GHL"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">GHL</p>
+  <div class="site-description" itemprop="description">Be water, my friend.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JLUGHL" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JLUGHL" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">GHL</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>
