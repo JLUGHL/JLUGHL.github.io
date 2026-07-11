@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 8.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Computer Networks 互联网设计原理与链路基础（Internet Design Principles &amp; Links） 1. Internet Architecture（互联网体系结构） 互联网设计目标：  支持大规模网络连接 保持可扩展性 支持不同网络互联 在故障情况下保持通信能力  互联网核心设计原则：  去中心化控制（Decentralized Control） 尽力而">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CS168-Intro">
+<meta property="og:url" content="http://example.com/2026/07/11/CS168Intro/index.html">
+<meta property="og:site_name" content="GHL&#39;s Blog">
+<meta property="og:description" content="Computer Networks 互联网设计原理与链路基础（Internet Design Principles &amp; Links） 1. Internet Architecture（互联网体系结构） 互联网设计目标：  支持大规模网络连接 保持可扩展性 支持不同网络互联 在故障情况下保持通信能力  互联网核心设计原则：  去中心化控制（Decentralized Control） 尽力而">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-07-10T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-11T02:49:58.356Z">
+<meta property="article:author" content="GHL">
+<meta property="article:tag" content="CS168">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2026/07/11/CS168Intro/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <title>CS168-Intro | GHL's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">GHL's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">随便学学</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/07/11/CS168Intro/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="GHL">
+      <meta itemprop="description" content="Be water, my friend.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="GHL's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          CS168-Intro
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-07-11 00:00:00 / 修改时间：10:49:58" itemprop="dateCreated datePublished" datetime="2026-07-11T00:00:00+08:00">2026-07-11</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1>Computer Networks</h1>
+<h1>互联网设计原理与链路基础（Internet Design Principles &amp; Links）</h1>
+<h2 id="1-Internet-Architecture（互联网体系结构）">1. Internet Architecture（互联网体系结构）</h2>
+<p>互联网设计目标：</p>
+<ul>
+<li>支持大规模网络连接</li>
+<li>保持可扩展性</li>
+<li>支持不同网络互联</li>
+<li>在故障情况下保持通信能力</li>
+</ul>
+<p>互联网核心设计原则：</p>
+<ol>
+<li>去中心化控制（Decentralized Control）</li>
+<li>尽力而为服务（Best-Effort Service）</li>
+<li>绕过故障（Route Around Trouble）</li>
+<li>简单网络核心（Dumb Infrastructure）</li>
+<li>端到端原则（End-to-End Principle）</li>
+<li>分层（Layering）</li>
+<li>窄腰模型（Narrow Waist）</li>
+</ol>
+<hr>
+<h2 id="2-Decentralized-Control（去中心化控制）">2. Decentralized Control（去中心化控制）</h2>
+<p>互联网没有中央控制中心。</p>
+<p>每个网络设备：</p>
+<ul>
+<li>独立运行</li>
+<li>根据自身信息进行决策</li>
+<li>不依赖单个控制节点</li>
+</ul>
+<p>优点：</p>
+<ul>
+<li>可扩展</li>
+<li>高可靠</li>
+<li>支持不同组织加入网络</li>
+</ul>
+<h3 id="SDN（Software-Defined-Networking）">SDN（Software-Defined Networking）</h3>
+<p>将网络控制逻辑集中到软件控制器。</p>
+<p>优点：</p>
+<ul>
+<li>方便管理</li>
+<li>可以进行全局优化</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>控制更加集中</li>
+</ul>
+<h3 id="DSDN（Distributed-SDN）">DSDN（Distributed SDN）</h3>
+<p>重新引入分布式思想，在集中控制和去中心化之间平衡。</p>
+<hr>
+<h1>3. Best-Effort Service（尽力而为服务）</h1>
+<p>IP协议采用尽力而为模型。</p>
+<p>IP负责：</p>
+<ul>
+<li>尽力发送数据包</li>
+<li>寻找路径</li>
+</ul>
+<p>但不保证：</p>
+<p>内容 是否保证</p>
+<hr>
+<p>可靠到达 否<br>
+数据顺序 否<br>
+延迟 否<br>
+带宽 否</p>
+<p>可靠性通常由TCP或应用层实现。</p>
+<hr>
+<h1>4. Route Around Trouble（绕过故障）</h1>
+<p>互联网需要具有容错能力。</p>
+<p>当：</p>
+<ul>
+<li>路由器失效</li>
+<li>链路断开</li>
+</ul>
+<p>网络应寻找其他路径。</p>
+<hr>
+<h1>5. Dumb Infrastructure（简单网络核心）</h1>
+<p>路由器主要负责：</p>
+<blockquote>
+<p>Forward Packets（转发数据包）</p>
+</blockquote>
+<p>核心思想：</p>
+<p>智能放在端系统，网络核心保持简单。</p>
+<hr>
+<h1>6. Layering（分层）</h1>
+<p>互联网采用分层结构：</p>
+<pre><code>Application Layer L7
+        ↑
+Transport Layer L4
+        ↑
+Network Layer L3
+        ↑
+Link Layer L2
+        ↑
+Physical Layer L1
+</code></pre>
+<p>优势：</p>
+<ul>
+<li>各层可以独立创新</li>
+<li>降低系统复杂度</li>
+<li>不同领域可以分别开发</li>
+</ul>
+<hr>
+<h1>7. Narrow Waist（窄腰模型）</h1>
+<p>互联网成功的重要原因：</p>
+<blockquote>
+<p>Layer 3 使用统一协议 IP</p>
+</blockquote>
+<p>不同层存在多个协议：</p>
+<p>层 协议</p>
+<hr>
+<p>应用层 HTTP、SMTP<br>
+传输层 TCP、UDP<br>
+网络层 IP<br>
+链路层 Ethernet、WiFi</p>
+<p>IP作为统一接口连接不同网络。</p>
+<hr>
+<h1>8. Demultiplexing（分用）</h1>
+<p>数据包到达主机后，需要确定交给哪个程序。</p>
+<h2 id="网络层到传输层">网络层到传输层</h2>
+<p>IP头部包含下一层协议字段：</p>
+<p>例如：</p>
+<ul>
+<li>IP → TCP</li>
+<li>IP → UDP</li>
+</ul>
+<h2 id="传输层到应用层">传输层到应用层</h2>
+<p>通过端口号区分应用：</p>
+<p>应用 端口</p>
+<hr>
+<p>HTTP 80<br>
+HTTPS 443<br>
+SSH 22</p>
+<p>端口分为：</p>
+<ul>
+<li>Logical Port：软件端口</li>
+<li>Physical Port：硬件接口</li>
+</ul>
+<hr>
+<h1>9. End-to-End Principle（端到端原则）</h1>
+<p>核心思想：</p>
+<blockquote>
+<p>某些功能必须由通信双方实现，而不是网络实现。</p>
+</blockquote>
+<p>例如可靠传输。</p>
+<p>网络实现可靠性的问题：</p>
+<ul>
+<li>增加网络复杂度</li>
+<li>如果网络代码错误，终端无法发现</li>
+</ul>
+<p>端系统实现可靠性的优势：</p>
+<ul>
+<li>简单</li>
+<li>正确性由通信双方保证</li>
+</ul>
+<p>注意：</p>
+<p>端到端原则不是绝对规则。</p>
+<p>网络可以提供优化功能，但最终正确性仍需终端保证。</p>
+<hr>
+<h1>10. Links（链路）</h1>
+<p>链路连接两个网络设备。</p>
+<p>三个重要参数：</p>
+<ol>
+<li>Bandwidth</li>
+<li>Propagation Delay</li>
+<li>Bandwidth-Delay Product</li>
+</ol>
+<hr>
+<h2 id="Bandwidth（带宽）">Bandwidth（带宽）</h2>
+<p>单位时间发送的数据量。</p>
+<p>单位：</p>
+<pre><code>bps(bits per second)
+</code></pre>
+<p>表示链路宽度。</p>
+<hr>
+<h2 id="Propagation-Delay（传播时延）">Propagation Delay（传播时延）</h2>
+<p>一个bit从链路一端传播到另一端所需时间。</p>
+<p>受：</p>
+<ul>
+<li>距离</li>
+<li>信号速度</li>
+</ul>
+<p>影响。</p>
+<p>表示链路长度。</p>
+<hr>
+<h2 id="Bandwidth-Delay-Product（带宽时延积）">Bandwidth-Delay Product（带宽时延积）</h2>
+<p>公式：</p>
+<pre><code>BDP = Bandwidth × Delay
+</code></pre>
+<p>表示链路中能够同时存在的数据量。</p>
+<hr>
+<h1>11. Pipe Diagram（管道模型）</h1>
+<p>链路可以看作管道：</p>
+<ul>
+<li>高度 = Bandwidth</li>
+<li>宽度 = Propagation Delay</li>
+<li>面积 = Bandwidth-Delay Product</li>
+</ul>
+<p>数据包宽度表示：</p>
+<p>Transmission Delay（发送时延）</p>
+<hr>
+<h1>12. Statistical Multiplexing（统计复用）</h1>
+<p>网络资源需要被多个用户共享。</p>
+<h2 id="Static-Allocation（静态分配）">Static Allocation（静态分配）</h2>
+<p>固定分配资源。</p>
+<p>缺点：</p>
+<ul>
+<li>浪费资源</li>
+</ul>
+<h2 id="Statistical-Multiplexing（统计复用）">Statistical Multiplexing（统计复用）</h2>
+<p>根据实际需求动态分配资源。</p>
+<p>优势：</p>
+<p>提高资源利用率。</p>
+<p>原因：</p>
+<pre><code>Aggregate Peak Demand
+&lt;
+Sum of Individual Peak Demands
+</code></pre>
+<hr>
+<h1>13. Circuit Switching vs Packet Switching</h1>
+<h2 id="Circuit-Switching（电路交换）">Circuit Switching（电路交换）</h2>
+<p>流程：</p>
+<pre><code>建立连接
+↓
+预留资源
+↓
+通信
+↓
+释放资源
+</code></pre>
+<p>优点：</p>
+<ul>
+<li>有资源保证</li>
+<li>延迟稳定</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>建立连接成本高</li>
+<li>资源可能浪费</li>
+<li>故障恢复困难</li>
+</ul>
+<hr>
+<h2 id="Packet-Switching（分组交换）">Packet Switching（分组交换）</h2>
+<p>互联网采用方式。</p>
+<p>特点：</p>
+<p>每个数据包独立处理。</p>
+<p>优点：</p>
+<ul>
+<li>资源利用率高</li>
+<li>支持突发流量</li>
+<li>更容易绕过故障</li>
+<li>实现简单</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>可能丢包</li>
+<li>延迟不稳定</li>
+</ul>
+<hr>
+<h1>14. 为什么互联网选择Packet Switching？</h1>
+<p>互联网流量主要具有：</p>
+<blockquote>
+<p>Bursty Traffic（突发性）</p>
+</blockquote>
+<p>例如：</p>
+<p>网页访问：</p>
+<ul>
+<li>打开网页时大量数据</li>
+<li>之后几乎没有数据</li>
+</ul>
+<p>而电话：</p>
+<ul>
+<li>持续稳定</li>
+</ul>
+<p>因此：</p>
+<ul>
+<li>电话网络适合电路交换</li>
+<li>互联网适合分组交换</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/CS168/" rel="tag"># CS168</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2026/05/20/DP1/" rel="prev" title="动态规划1">
+      <i class="fa fa-chevron-left"></i> 动态规划1
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">Computer Networks</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">互联网设计原理与链路基础（Internet Design Principles &amp; Links）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-Internet-Architecture%EF%BC%88%E4%BA%92%E8%81%94%E7%BD%91%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%EF%BC%89"><span class="nav-number">2.1.</span> <span class="nav-text">1. Internet Architecture（互联网体系结构）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-Decentralized-Control%EF%BC%88%E5%8E%BB%E4%B8%AD%E5%BF%83%E5%8C%96%E6%8E%A7%E5%88%B6%EF%BC%89"><span class="nav-number">2.2.</span> <span class="nav-text">2. Decentralized Control（去中心化控制）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SDN%EF%BC%88Software-Defined-Networking%EF%BC%89"><span class="nav-number">2.2.1.</span> <span class="nav-text">SDN（Software-Defined Networking）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DSDN%EF%BC%88Distributed-SDN%EF%BC%89"><span class="nav-number">2.2.2.</span> <span class="nav-text">DSDN（Distributed SDN）</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">3. Best-Effort Service（尽力而为服务）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">4. Route Around Trouble（绕过故障）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">5.</span> <span class="nav-text">5. Dumb Infrastructure（简单网络核心）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">6.</span> <span class="nav-text">6. Layering（分层）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">7.</span> <span class="nav-text">7. Narrow Waist（窄腰模型）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">8.</span> <span class="nav-text">8. Demultiplexing（分用）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E5%B1%82%E5%88%B0%E4%BC%A0%E8%BE%93%E5%B1%82"><span class="nav-number">8.1.</span> <span class="nav-text">网络层到传输层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BC%A0%E8%BE%93%E5%B1%82%E5%88%B0%E5%BA%94%E7%94%A8%E5%B1%82"><span class="nav-number">8.2.</span> <span class="nav-text">传输层到应用层</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">9.</span> <span class="nav-text">9. End-to-End Principle（端到端原则）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">10.</span> <span class="nav-text">10. Links（链路）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Bandwidth%EF%BC%88%E5%B8%A6%E5%AE%BD%EF%BC%89"><span class="nav-number">10.1.</span> <span class="nav-text">Bandwidth（带宽）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Propagation-Delay%EF%BC%88%E4%BC%A0%E6%92%AD%E6%97%B6%E5%BB%B6%EF%BC%89"><span class="nav-number">10.2.</span> <span class="nav-text">Propagation Delay（传播时延）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bandwidth-Delay-Product%EF%BC%88%E5%B8%A6%E5%AE%BD%E6%97%B6%E5%BB%B6%E7%A7%AF%EF%BC%89"><span class="nav-number">10.3.</span> <span class="nav-text">Bandwidth-Delay Product（带宽时延积）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">11.</span> <span class="nav-text">11. Pipe Diagram（管道模型）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">12.</span> <span class="nav-text">12. Statistical Multiplexing（统计复用）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Static-Allocation%EF%BC%88%E9%9D%99%E6%80%81%E5%88%86%E9%85%8D%EF%BC%89"><span class="nav-number">12.1.</span> <span class="nav-text">Static Allocation（静态分配）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Statistical-Multiplexing%EF%BC%88%E7%BB%9F%E8%AE%A1%E5%A4%8D%E7%94%A8%EF%BC%89"><span class="nav-number">12.2.</span> <span class="nav-text">Statistical Multiplexing（统计复用）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">13.</span> <span class="nav-text">13. Circuit Switching vs Packet Switching</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Circuit-Switching%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%EF%BC%89"><span class="nav-number">13.1.</span> <span class="nav-text">Circuit Switching（电路交换）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Packet-Switching%EF%BC%88%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%EF%BC%89"><span class="nav-number">13.2.</span> <span class="nav-text">Packet Switching（分组交换）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">14.</span> <span class="nav-text">14. 为什么互联网选择Packet Switching？</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="GHL"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">GHL</p>
+  <div class="site-description" itemprop="description">Be water, my friend.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JLUGHL" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JLUGHL" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">GHL</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>
