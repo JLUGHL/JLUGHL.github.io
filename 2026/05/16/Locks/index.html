@@ -17,13 +17,13 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"jlughl.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
   <meta name="description" content="我们为什么需要锁？ 如果一个应用程序运行在多个 CPU 核上，并且执行了系统调用，那么内核需要能够处理这些并行的系统调用。 如果多个内核都在运行系统调用，那么它们可能访问内核中共享的数据结构。 当有对这些数据结构的并行访问时，我们需要锁来协调对共享数据的更新。更进一步的，我们需要锁来保证共享的数据是正确的。 从 kfree 考虑，我们假设有2个CPU在处理这个函数，这时候一个CPU执行 r-&amp;gt">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Locks">
-<meta property="og:url" content="http://example.com/2026/05/16/Locks/index.html">
+<meta property="og:url" content="https://jlughl.github.io/2026/05/16/Locks/index.html">
 <meta property="og:site_name" content="GHL&#39;s Blog">
 <meta property="og:description" content="我们为什么需要锁？ 如果一个应用程序运行在多个 CPU 核上，并且执行了系统调用，那么内核需要能够处理这些并行的系统调用。 如果多个内核都在运行系统调用，那么它们可能访问内核中共享的数据结构。 当有对这些数据结构的并行访问时，我们需要锁来协调对共享数据的更新。更进一步的，我们需要锁来保证共享的数据是正确的。 从 kfree 考虑，我们假设有2个CPU在处理这个函数，这时候一个CPU执行 r-&amp;gt">
 <meta property="og:locale" content="zh_CN">
@@ -33,7 +33,7 @@
 <meta property="article:tag" content="6.S081">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://example.com/2026/05/16/Locks/">
+<link rel="canonical" href="https://jlughl.github.io/2026/05/16/Locks/">
 
 
 <script id="page-configurations">
@@ -46,6 +46,8 @@
   };
 </script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<link rel="stylesheet" href="/css/custom.css">
+
   <title>Locks | GHL's Blog</title>
   
 
@@ -119,6 +121,11 @@
     <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
 
   </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
         <li class="menu-item menu-item-tags">
 
     <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
@@ -157,7 +164,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2026/05/16/Locks/">
+    <link itemprop="mainEntityOfPage" href="https://jlughl.github.io/2026/05/16/Locks/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -257,8 +264,8 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2026/04/22/BSGS%E7%AE%97%E6%B3%95/" rel="prev" title="">
-      <i class="fa fa-chevron-left"></i> 
+    <a href="/2026/01/20/Virtualization/" rel="prev" title="Virtualization">
+      <i class="fa fa-chevron-left"></i> Virtualization
     </a></div>
       <div class="post-nav-item">
     <a href="/2026/05/20/DP1/" rel="next" title="动态规划1">
@@ -338,14 +345,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-count">8</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-count">6</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
