@@ -1,0 +1,148 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>CS168：ARP、DHCP 与 NAT</title><meta name="keywords" content="CS168"><meta name="author" content="GHL"><meta name="copyright" content="GHL"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="设备连上局域网后，要先获得网络配置，再找到下一跳的链路层地址。以新加入校园 Wi-Fi 的笔记本为例：DHCP 帮它取得 IP 配置；要发送第一个数据包时，ARP 帮它查出默认网关的 MAC 地址。 DHCP：取得网络配置 DHCP 通常通过 DORA 流程分配租约：客户端广播 Discover，服务器回复 Offer，客户端 Request 选择一份配置，服务器用 Acknowledge 确认。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CS168：ARP、DHCP 与 NAT">
+<meta property="og:url" content="https://jlughl.github.io/2026/10/15/CS168NetworkAccess/index.html">
+<meta property="og:site_name" content="GHL&#39;s Blog">
+<meta property="og:description" content="设备连上局域网后，要先获得网络配置，再找到下一跳的链路层地址。以新加入校园 Wi-Fi 的笔记本为例：DHCP 帮它取得 IP 配置；要发送第一个数据包时，ARP 帮它查出默认网关的 MAC 地址。 DHCP：取得网络配置 DHCP 通常通过 DORA 流程分配租约：客户端广播 Discover，服务器回复 Offer，客户端 Request 选择一份配置，服务器用 Acknowledge 确认。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://jlughl.github.io/images/background.jpg">
+<meta property="article:published_time" content="2026-10-15T02:00:00.000Z">
+<meta property="article:modified_time" content="2026-10-15T03:58:59.934Z">
+<meta property="article:author" content="GHL">
+<meta property="article:tag" content="CS168">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://jlughl.github.io/images/background.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://jlughl.github.io/2026/10/15/CS168NetworkAccess/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: true,
+    post: true
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"limitCount":50,"languages":{"author":"作者: GHL","link":"链接: ","source":"来源: GHL's Blog","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。"}},
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://fastly.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.js',
+      css: 'https://fastly.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'CS168：ARP、DHCP 与 NAT',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026-10-15 11:58:59'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 8.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="is-center"><div class="avatar-img"><img src="/images/avatar.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">GHL</div><div class="author-info__description">Be water, my friend.</div></div><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/JLUGHL" target="_blank" title="GitHub"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:3345212842@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">GHL's Blog</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">CS168：ARP、DHCP 与 NAT</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="fa-fw post-meta-icon far fa-calendar-alt"></i><span class="post-meta-label">发表于</span><time datetime="2026-10-15T02:00:00.000Z" title="发表于 2026-10-15 10:00:00">2026-10-15</time></span></div><div class="meta-secondline"></div></div></div><article class="post-content" id="article-container"><p>设备连上局域网后，要先获得网络配置，再找到下一跳的链路层地址。以新加入校园 Wi-Fi 的笔记本为例：DHCP 帮它取得 IP 配置；要发送第一个数据包时，ARP 帮它查出默认网关的 MAC 地址。</p>
+<h2 id="DHCP：取得网络配置">DHCP：取得网络配置</h2>
+<p>DHCP 通常通过 DORA 流程分配租约：客户端广播 Discover，服务器回复 Offer，客户端 Request 选择一份配置，服务器用 Acknowledge 确认。配置通常包括 IP 地址、子网掩码、默认网关和 DNS 解析器。IPv4 DHCP 使用 UDP，服务器监听端口 67，客户端使用端口 68。</p>
+<p>IPv6 有邻居发现（Neighbor Discovery）和 SLAAC（无状态地址自动配置）等机制。路由器可以通告网络前缀，主机据此生成本地 IPv6 地址；IPv6 的邻居解析也由 ICMPv6 邻居发现完成，而不是使用 IPv4 的 ARP。</p>
+<h2 id="ARP：找到同一链路上的-MAC-地址">ARP：找到同一链路上的 MAC 地址</h2>
+<p>发送主机先判断目的 IP 是否在本地子网。如果在，就查询目的主机的 MAC；如果不在，就查询默认网关的 MAC，把以太网帧交给网关，再由路由器继续转发。</p>
+<p>以太网广播中的 ARP 请求会询问“谁拥有这个 IPv4 地址？”。拥有该地址的主机单播回复自己的 MAC 地址，发送方随后缓存这组对应关系。ARP 只解决本地链路上的地址解析，不负责寻找跨互联网的路径。</p>
+<h2 id="NAT：共享公网地址">NAT：共享公网地址</h2>
+<p>家庭路由器常用网络地址转换（NAT），让多台使用私有 IPv4 地址的设备共享公网地址。常见的端口地址转换（PAT）还会改写传输层端口，并记录连接映射，以便把返回流量送回正确的内部主机。</p>
+<p>这能节省公网 IPv4 地址，但也让外部主机通常无法直接发起到内部设备的连接；需要端口转发或其他穿透机制。NAT 本身不是完整的防火墙，也不等同于加密。</p>
+<p>下面的映射表展示了 PAT 如何利用不同端口区分两台内部主机发往同一服务器的连接。</p>
+<p><img src="/images/cs168/nat-pat-table.png" alt="PAT 映射表示例"></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">GHL</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://jlughl.github.io/2026/10/15/CS168NetworkAccess/">https://jlughl.github.io/2026/10/15/CS168NetworkAccess/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://jlughl.github.io" target="_blank">GHL's Blog</a>！</span></div></div><div class="tag_share"><div class="post_share"><div class="social-share" data-image="/images/background.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://fastly.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2026/10/15/CS168TCP/"><img class="prev-cover" src="/images/background.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">CS168：TCP 如何提供可靠传输</div></div></a></div><div class="next-post pull-right"><a href="/2026/10/15/CS168Ethernet/"><img class="next-cover" src="/images/background.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">CS168：以太网、交换机与生成树</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2026/07/11/CS168Intro/" title="CS168-Intro"><img class="cover" src="/images/background.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-11</div><div class="title">CS168-Intro</div></div></a></div><div><a href="/2026/08/23/CS168LinkState/" title="CS168：链路状态路由协议"><img class="cover" src="/images/background.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-23</div><div class="title">CS168：链路状态路由协议</div></div></a></div><div><a href="/2026/10/15/CS168Ethernet/" title="CS168：以太网、交换机与生成树"><img class="cover" src="/images/background.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-15</div><div class="title">CS168：以太网、交换机与生成树</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#DHCP%EF%BC%9A%E5%8F%96%E5%BE%97%E7%BD%91%E7%BB%9C%E9%85%8D%E7%BD%AE"><span class="toc-number">1.</span> <span class="toc-text">DHCP：取得网络配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ARP%EF%BC%9A%E6%89%BE%E5%88%B0%E5%90%8C%E4%B8%80%E9%93%BE%E8%B7%AF%E4%B8%8A%E7%9A%84-MAC-%E5%9C%B0%E5%9D%80"><span class="toc-number">2.</span> <span class="toc-text">ARP：找到同一链路上的 MAC 地址</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#NAT%EF%BC%9A%E5%85%B1%E4%BA%AB%E5%85%AC%E7%BD%91%E5%9C%B0%E5%9D%80"><span class="toc-number">3.</span> <span class="toc-text">NAT：共享公网地址</span></a></li></ol></div></div><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/images/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">GHL</div><div class="author-info__description">Be water, my friend.</div></div><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/JLUGHL" target="_blank" title="GitHub"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:3345212842@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div></div></div></main><footer id="footer" style="background: #FFFFFF"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By GHL</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/chenxz21/hexo-theme-bcxm">Bcxm</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://fastly.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script><div class="js-pjax"></div><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://fastly.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-nest.min.js"></script><script id="click-heart" src="https://fastly.jsdelivr.net/npm/butterfly-extsrc@1/dist/click-heart.min.js" async="async" mobile="false"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

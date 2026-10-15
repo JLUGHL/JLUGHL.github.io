@@ -1,0 +1,148 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>CS168：IP 寻址、路由器与 BGP</title><meta name="keywords" content="CS168"><meta name="author" content="GHL"><meta name="copyright" content="GHL"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="路由器收到 IP 数据包后，要根据目的 IP 决定下一跳。这个工作可以分成两层：控制平面通过路由协议学习和计算路径；数据平面查转发表，尽快把包送到对应端口。可以把它想成物流中心：控制平面规划目的地对应的分拣路线，数据平面负责处理每一件包裹。 IP 前缀与最长匹配 IPv4 地址有 32 位，常写成四组十进制数，例如 192.168.1.25。CIDR 用斜杠标出网络前缀长度：192.168.1.0">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CS168：IP 寻址、路由器与 BGP">
+<meta property="og:url" content="https://jlughl.github.io/2026/10/15/CS168Routing/index.html">
+<meta property="og:site_name" content="GHL&#39;s Blog">
+<meta property="og:description" content="路由器收到 IP 数据包后，要根据目的 IP 决定下一跳。这个工作可以分成两层：控制平面通过路由协议学习和计算路径；数据平面查转发表，尽快把包送到对应端口。可以把它想成物流中心：控制平面规划目的地对应的分拣路线，数据平面负责处理每一件包裹。 IP 前缀与最长匹配 IPv4 地址有 32 位，常写成四组十进制数，例如 192.168.1.25。CIDR 用斜杠标出网络前缀长度：192.168.1.0">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://jlughl.github.io/images/background.jpg">
+<meta property="article:published_time" content="2026-10-15T00:00:00.000Z">
+<meta property="article:modified_time" content="2026-10-15T03:58:59.896Z">
+<meta property="article:author" content="GHL">
+<meta property="article:tag" content="CS168">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://jlughl.github.io/images/background.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://jlughl.github.io/2026/10/15/CS168Routing/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: true,
+    post: true
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"limitCount":50,"languages":{"author":"作者: GHL","link":"链接: ","source":"来源: GHL's Blog","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。"}},
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://fastly.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.js',
+      css: 'https://fastly.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'CS168：IP 寻址、路由器与 BGP',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026-10-15 11:58:59'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 8.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="is-center"><div class="avatar-img"><img src="/images/avatar.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">GHL</div><div class="author-info__description">Be water, my friend.</div></div><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/JLUGHL" target="_blank" title="GitHub"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:3345212842@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">GHL's Blog</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">CS168：IP 寻址、路由器与 BGP</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="fa-fw post-meta-icon far fa-calendar-alt"></i><span class="post-meta-label">发表于</span><time datetime="2026-10-15T00:00:00.000Z" title="发表于 2026-10-15 08:00:00">2026-10-15</time></span></div><div class="meta-secondline"></div></div></div><article class="post-content" id="article-container"><p>路由器收到 IP 数据包后，要根据目的 IP 决定下一跳。这个工作可以分成两层：控制平面通过路由协议学习和计算路径；数据平面查转发表，尽快把包送到对应端口。可以把它想成物流中心：控制平面规划目的地对应的分拣路线，数据平面负责处理每一件包裹。</p>
+<h2 id="IP-前缀与最长匹配">IP 前缀与最长匹配</h2>
+<p>IPv4 地址有 32 位，常写成四组十进制数，例如 <code>192.168.1.25</code>。CIDR 用斜杠标出网络前缀长度：<code>192.168.1.0/24</code> 表示前 24 位是网络部分，剩余 8 位用于该网络中的地址。对应的子网掩码是 <code>255.255.255.0</code>。</p>
+<p>路由表中的前缀可能重叠。若表里有 <code>10.0.0.0/8</code> 和 <code>10.1.2.0/24</code>，发往 <code>10.1.2.7</code> 的包应选更具体的 <code>/24</code> 路由。这叫最长前缀匹配（Longest Prefix Match）。它让路由器可以用一条较短的汇总路由覆盖许多地址，同时为少数网络提供更具体的路径。</p>
+<p>IPv6 将地址扩展为 128 位，以十六进制分组表示，例如 <code>2001:db8::1</code>。连续的零分组可以压缩成 <code>::</code>，但一个地址中最多只能使用一次。</p>
+<h2 id="从域内路由到域间路由">从域内路由到域间路由</h2>
+<p>互联网由许多自治系统（Autonomous System，AS）组成。每个 AS 由一个组织管理，例如 ISP、大学或大型企业。一个组织内部使用域内路由协议计算路径；AS 之间则主要通过 BGP（Border Gateway Protocol）交换可达性信息。</p>
+<p>BGP 不只是寻找跳数最少的路径。不同 AS 有不同的商业关系和流量政策：客户向供应商购买转发服务，互为对等方的网络则交换约定范围内的流量。因此，BGP 的路径选择会考虑策略，而不单是距离。</p>
+<p>eBGP 在不同 AS 之间交换路由；iBGP 把外部学到的路由传播给本 AS 内的路由器。实际转发时，路由器先决定使用哪个外部出口，再通过域内路由找到到该出口的下一跳。某些场景会采用“热土豆”策略：在满足路由政策的前提下，尽快把流量交给邻接网络。</p>
+<p>因此，域间路由和域内最短路径不是同一个问题：前者还要尊重网络之间的策略与商业关系。</p>
+<p>下面的示意图展示了一类遵循客户—供应商关系的路径：流量可以先向上游网络传递，再沿对等关系跨网，最后向下游客户传递。</p>
+<p><img src="/images/cs168/bgp-valley.png" alt="自治系统商业关系下的路径示意图"></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">GHL</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://jlughl.github.io/2026/10/15/CS168Routing/">https://jlughl.github.io/2026/10/15/CS168Routing/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://jlughl.github.io" target="_blank">GHL's Blog</a>！</span></div></div><div class="tag_share"><div class="post_share"><div class="social-share" data-image="/images/background.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://fastly.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2026/10/15/CS168Ethernet/"><img class="prev-cover" src="/images/background.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">CS168：以太网、交换机与生成树</div></div></a></div><div class="next-post pull-right"><a href="/2026/08/23/CS168LinkState/"><img class="next-cover" src="/images/background.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">CS168：链路状态路由协议</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2026/07/11/CS168Intro/" title="CS168-Intro"><img class="cover" src="/images/background.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-11</div><div class="title">CS168-Intro</div></div></a></div><div><a href="/2026/08/23/CS168LinkState/" title="CS168：链路状态路由协议"><img class="cover" src="/images/background.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-23</div><div class="title">CS168：链路状态路由协议</div></div></a></div><div><a href="/2026/10/15/CS168Ethernet/" title="CS168：以太网、交换机与生成树"><img class="cover" src="/images/background.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-15</div><div class="title">CS168：以太网、交换机与生成树</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#IP-%E5%89%8D%E7%BC%80%E4%B8%8E%E6%9C%80%E9%95%BF%E5%8C%B9%E9%85%8D"><span class="toc-number">1.</span> <span class="toc-text">IP 前缀与最长匹配</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%8E%E5%9F%9F%E5%86%85%E8%B7%AF%E7%94%B1%E5%88%B0%E5%9F%9F%E9%97%B4%E8%B7%AF%E7%94%B1"><span class="toc-number">2.</span> <span class="toc-text">从域内路由到域间路由</span></a></li></ol></div></div><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/images/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">GHL</div><div class="author-info__description">Be water, my friend.</div></div><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/JLUGHL" target="_blank" title="GitHub"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:3345212842@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div></div></div></main><footer id="footer" style="background: #FFFFFF"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By GHL</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/chenxz21/hexo-theme-bcxm">Bcxm</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://fastly.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script><div class="js-pjax"></div><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://fastly.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-nest.min.js"></script><script id="click-heart" src="https://fastly.jsdelivr.net/npm/butterfly-extsrc@1/dist/click-heart.min.js" async="async" mobile="false"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
